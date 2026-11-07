@@ -237,7 +237,7 @@ This guarantees seamless model loading on any machine without deserialization wa
 
 ### 1. Clone or Open the Repository
 ```bash
-git clone https://github.com/<your-username>/ShadowFox-ML-Engineer-Internship.git
+git clone https://github.com/Subhamgupta9/ShadowFox-ML-Engineer-Internship.git
 cd ShadowFox-ML-Engineer-Internship/Week-1/Task-1-Image-Tagging
 ```
 

@@ -79,7 +79,7 @@ To explore or run any completed task locally:
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/<your-username>/ShadowFox-ML-Engineer-Internship.git
+git clone https://github.com/Subhamgupta9/ShadowFox-ML-Engineer-Internship.git
 cd ShadowFox-ML-Engineer-Internship
 ```
 
@@ -113,6 +113,7 @@ For full architectural details, training benchmarks, and prediction samples, see
 
 ## 👤 Author & Acknowledgements
 
-- **Intern:** Divyanshi Gupta
+- **Intern:** [Subham Gupta](https://github.com/Subhamgupta9)
 - **Role:** Machine Learning Engineer Intern
 - **Organization:** [ShadowFox](https://shadowfox.in/)
+- **GitHub:** [@Subhamgupta9](https://github.com/Subhamgupta9)
