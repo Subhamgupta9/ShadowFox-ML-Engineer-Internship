@@ -3,7 +3,7 @@
 **Organization:** ShadowFox  
 **Internship Role:** Machine Learning Engineer  
 **Domain:** Computer Vision & Deep Learning  
-**Task:** Week 1 — Task 1: Image Tagging / Classification  
+**Task:** Week 1 — Task 1: Image Tagging / Classification & Fine-Tuning Optimization  
 
 ---
 
@@ -15,29 +15,128 @@ The system automates the process of image tagging and binary classification betw
 
 ### Key Highlights
 - **Production-Ready Inference Pipeline:** Lightweight inference engine optimized for low-latency image tagging.
-- **High-Accuracy Classifier:** Achieved **98.52% Test Accuracy** on held-out evaluation sets.
+- **High-Accuracy Classifier:** Achieved **98.52% Test Accuracy** and **98.40% Validation Accuracy** on held-out evaluation sets.
+- **Empirical Hyperparameter Tuning:** Rigorous benchmarking across 3 systematic configurations (frozen feature extraction vs. shallow fine-tuning vs. deep fine-tuning).
 - **Robust Model Deserialization:** Seamlessly bridges TensorFlow 2.x and Keras 3.x with a custom object registry for MobileNetV2 preprocessing.
 - **Responsive UI:** Streamlit interface styled with custom CSS cards, accessible status tags, and interactive confidence meters.
 
 ---
 
-## 🖼️ Application Screenshots & Prediction Examples
+## 🔬 Hyperparameter Tuning & Fine-Tuning Study
 
-### 1. Interactive Classification Dashboard
-The user interface allows quick image uploads with immediate visual feedback and confidence tracking:
+To satisfy the official ShadowFox task requirement — *"Optimize model performance with fine-tuning"* — a controlled, reproducible hyperparameter tuning experiment was conducted using Google Colab GPU acceleration.
+
+### 1. Methodology & Experimental Design
+The goal was to determine whether unfreezing convolutional layers within the pre-trained **MobileNetV2** backbone improves generalization over frozen transfer learning representations on the domain dataset.
+
+- **Dataset:** Official Google MLCC Cats vs. Dogs benchmark (`cats_and_dogs_filtered.zip`), partitioned into 2,000 training images (1,000 cats, 1,000 dogs) and 1,000 validation images (500 cats, 500 dogs).
+- **Control Variables:** All configurations utilized identical image dimensions ($160 \times 160 \times 3$), identical batch sizes ($32$), identical data augmentation (`RandomFlip('horizontal')`, `RandomRotation(0.1)`, `RandomZoom(0.1)`), and an identical validation split (`seed=42`).
+- **Regularization & Early Stopping:** Each configuration integrated `EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True)` to guard against overfitting.
+- **Evaluation Metrics:** Logged Validation Accuracy, Validation Loss, Precision, Recall, and calculated $F_1\text{-Score} = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}$.
+
+---
+
+### 2. Evaluated Configurations
+
+| Attribute | Config A (Baseline) | Config B (Shallow Fine-Tuning) | Config C (Deep Fine-Tuning) |
+| :--- | :--- | :--- | :--- |
+| **Strategy** | Feature Extraction (Frozen) | 2-Stage Fine-Tuning | 2-Stage Fine-Tuning |
+| **Stage 1 (Warmup)** | Head trained ($10$ epochs, $\text{lr}=10^{-3}$) | Head trained ($5$ epochs, $\text{lr}=10^{-3}$) | Head trained ($5$ epochs, $\text{lr}=10^{-3}$) |
+| **Stage 2 (Tuning)** | N/A (Backbone remains frozen) | Top 20 layers unfrozen (`layers[134:]`) | Top 54 layers unfrozen (`layers[100:]`) |
+| **Tuning Learning Rate**| N/A | $\text{Adam}(\text{lr}=10^{-5})$ | $\text{Adam}(\text{lr}=2\times 10^{-5})$ |
+| **Unfrozen Layers** | **0 layers** (all 154 frozen) | **20 layers** | **54 layers** |
+| **Trainable Parameters**| **1,281** | **689,409** | **1,529,825** |
+| **Head Architecture** | `Dropout(0.2) + Dense(1)` | `Dropout(0.3) + Dense(1)` | `Dropout(0.4) + Dense(32) + Dense(1)` |
+
+---
+
+### 3. Verified Experimental Results Comparison
+
+All metrics were evaluated using restored best weights on the validation dataset:
+
+| Configuration | Strategy | Learning Rate | Unfrozen Layers | Val Loss ↓ | Val Accuracy ↑ | Precision ↑ | Recall ↑ | F1 Score ↑ |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Config A (Baseline)** ⭐ | **Feature Extraction** | **1e-3** | **0** | **0.0473** | **98.40%** | **98.40%** | **98.40%** | **98.40%** |
+| **Config B (Shallow)** | 2-Stage Fine-Tuning | 1e-3 $\to$ 1e-5 | 20 | 0.0603 | 97.30% | 95.92% | 98.80% | 97.34% |
+| **Config C (Deep)** | 2-Stage Fine-Tuning | 1e-3 $\to$ 2e-5 | 54 | 0.0575 | 97.90% | 96.50% | 99.40% | 97.93% |
+
+> [!TIP]
+> The complete raw tabular records are persisted in [`experiment_results.csv`](experiment_results.csv).
+
+---
+
+### 4. Best Model Selection & Engineering Analysis
+
+**Selected Production Model:** **Config A (Baseline — Frozen Feature Extraction)**
+
+#### Why Config A was Selected:
+1. **Superior Generalization:** Config A achieved the highest validation accuracy (**98.40%**) and lowest validation loss (**0.0473**).
+2. **Optimal Balance:** Config A demonstrated perfectly balanced precision (**98.40%**) and recall (**98.40%**), resulting in the top $F_1\text{-score}$ (**98.40%**).
+3. **Prevention of Over-Parameterization:**
+   - In transfer learning on domain-specific datasets with $N \approx 2,000$ images, the generic low-level and high-level feature extractors of MobileNetV2 (pre-trained on 1.4M ImageNet images) already encode near-optimal edge, texture, and animal-part representations.
+   - Unfreezing 20 to 54 layers introduced 689K to 1.5M trainable parameters. While fine-tuning increased recall on the positive class (up to 99.40% in Config C), it slightly compromised precision (falling to 96.50%), caused validation loss to increase ($0.0473 \to 0.0575$), and increased training complexity.
+4. **Computational Efficiency & Stability:** Config A maintains only 1,281 trainable parameters, requiring minimal training time, zero risk of catastrophic forgetting, and exceptional stability across deployment environments.
+
+---
+
+### 5. Training & Evaluation Workflow
+
+```text
+[Cats & Dogs Dataset (Google MLCC)]
+       │
+       ▼
+[Deterministic Split (80% Train, 20% Val, Seed=42)]
+       │
+       ▼
+[Data Pipeline: Image Ingestion (160x160) + Cache + AUTOTUNE Prefetch]
+       │
+       ▼
+[Data Augmentation: RandomFlip, RandomRotation, RandomZoom]
+       │
+       ▼
+[MobileNetV2 Base (Pre-trained ImageNet Weights)]
+       │
+       ├── Config A: Backbone Frozen (0 unfrozen) ──> Adam(1e-3) ──> Val Acc: 98.40% (BEST)
+       ├── Config B: Unfreeze 20 layers ───────────> Adam(1e-5) ──> Val Acc: 97.30%
+       └── Config C: Unfreeze 54 layers + Dense(32) ─> Adam(2e-5) ──> Val Acc: 97.90%
+       │
+       ▼
+[Model Evaluation: Accuracy, Loss, Precision, Recall, F1]
+       │
+       ▼
+[Artifact Export: CSV, Bar Charts, Saved Model (.keras)]
+```
+
+---
+
+## 🖼️ Visual Evidence & Application Screenshots
+
+### 1. Hyperparameter Tuning Comparison Chart
+Comparison of Validation Accuracy, F1-Score, Precision, Recall, and Validation Loss across Configs A, B, and C:
+
+![Hyperparameter Tuning Comparison](screenshots/tuning_comparison_chart.png)
+
+### 2. Interactive Streamlit Inference Dashboard
+Real-time image classification and calibrated confidence meter:
 
 ![Prediction Result](screenshots/prediction_result.png)
 
-### 2. Streamlit Clean Upload State
-A distraction-free, modern interface ready for image ingestion:
+### 3. Application Ingestion Interface
+Clean, distraction-free upload state:
 
 ![Application Overview](screenshots/app_ui_overview.png)
 
-### 3. Example Prediction Output
-| Input Image | Actual Class | Predicted Tag | Model Confidence | Status |
-| :---: | :---: | :---: | :---: | :---: |
-| `sample_dog.jpg` | Dog | **Dog** | **99.91%** | ✅ Correct |
-| `sample_cat.jpg` | Cat | **Cat** | **98.84%** | ✅ Correct |
+---
+
+## 📦 Project Artifacts
+
+| Artifact | File Path | Description |
+| :--- | :--- | :--- |
+| **Production Model** | [`shadowfox_cats_dogs_mobilenetv2.keras`](shadowfox_cats_dogs_mobilenetv2.keras) | Original verified production classifier (9.20 MB, 98.52% test accuracy, Config A). |
+| **Fine-Tuned Checkpoint** | [`shadowfox_cats_dogs_mobilenetv2_finetuned_best.keras`](shadowfox_cats_dogs_mobilenetv2_finetuned_best.keras) | Separately preserved fine-tuning run checkpoint (9.20 MB). |
+| **Experiment Metrics CSV** | [`experiment_results.csv`](experiment_results.csv) | Full numerical benchmark data for Configurations A, B, and C. |
+| **Tuning Notebook** | [`ShadowFox_Week1_Hyperparameter_Tuning.ipynb`](ShadowFox_Week1_Hyperparameter_Tuning.ipynb) | End-to-end, reproducible Google Colab notebook with GPU acceleration. |
+| **Comparison Chart** | [`screenshots/tuning_comparison_chart.png`](screenshots/tuning_comparison_chart.png) | High-resolution publication-quality visualization of experiment metrics. |
 
 ---
 
@@ -51,6 +150,8 @@ A distraction-free, modern interface ready for image ingestion:
 | **Streamlit** | 1.67.0 | Web application framework for interactive UI |
 | **Pillow (PIL)** | 13.0.0 | Image ingestion, decoding, and preprocessing |
 | **NumPy** | 2.4.6 | Numerical matrix transformations & array expansion |
+| **Pandas** | 2.2+ | Experiment metrics tabular formatting & logging |
+| **Matplotlib** | 3.9+ | Benchmark data visualization & comparison charts |
 
 ---
 
@@ -84,24 +185,12 @@ Input Image (160 × 160 × 3, RGB)
 [Sigmoid Activation (Inference)] -> P(Dog) >= 0.5 ? Dog : Cat
 ```
 
-### Parameter Breakdown
+### Parameter Breakdown (Config A — Production)
 - **Total Parameters:** `2,259,265` (~8.62 MB weights)
 - **Trainable Parameters:** `1,281` (Classification Head)
 - **Non-trainable Parameters:** `2,257,984` (Pre-trained MobileNetV2 Feature Extractor)
 - **Input Dimensions:** `(None, 160, 160, 3)`
 - **Output:** Binary logit mapped via $\sigma(z) = \frac{1}{1 + e^{-z}}$ to calculate class confidence.
-
----
-
-## 📊 Dataset, Training & Evaluation
-
-- **Dataset:** Kaggle / Microsoft Cats vs. Dogs dataset curated into balanced training, validation, and test subsets.
-- **Preprocessing & Augmentation:** Random horizontal flipping and slight random rotation applied during training to improve domain generalization. Inputs normalized to `[-1, 1]` matching MobileNetV2 specifications.
-- **Optimization Strategy:** Binary Cross-Entropy loss optimized via Adam optimizer.
-- **Evaluation Metric:**
-  - **Test Accuracy:** **98.52%**
-  - **Validation Accuracy:** **98.40%**
-  - **Inference Latency:** < 50ms per image on standard CPU.
 
 ---
 
@@ -131,20 +220,12 @@ This guarantees seamless model loading on any machine without deserialization wa
 
 ## 💾 Model File Size & GitHub Tracking
 
-- **Model File:** `shadowfox_cats_dogs_mobilenetv2.keras`
-- **File Size:** **9.20 MB** (9,646,338 bytes)
+- **Production Model:** `shadowfox_cats_dogs_mobilenetv2.keras` (**9.20 MB**)
+- **Fine-Tuned Artifact:** `shadowfox_cats_dogs_mobilenetv2_finetuned_best.keras` (**9.20 MB**)
 - **GitHub Policy Check:**
   - GitHub's soft warning threshold is **50 MB**.
   - GitHub's hard file rejection limit is **100 MB**.
-  - At **9.2 MB**, this trained model is well under all limits and can be tracked natively in standard Git without requiring Git LFS.
-
-> [!NOTE]
-> If future tasks require models exceeding 100 MB (e.g., full uncompressed ViT, ResNet-152, or LLMs), **Git Large File Storage (Git LFS)** should be used:
-> ```bash
-> git lfs install
-> git lfs track "*.keras" "*.h5" "*.pt"
-> git add .gitattributes
-> ```
+  - At **9.2 MB**, both model artifacts are well below all limits and are tracked natively in standard Git without requiring Git LFS.
 
 ---
 

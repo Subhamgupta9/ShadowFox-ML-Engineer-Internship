@@ -1,0 +1,4 @@
+Configuration,Strategy,Learning_Rate,Unfrozen_Layers,Head_Architecture,Val_Loss,Val_Accuracy,Val_Precision,Val_Recall,Val_F1_Score
+Config A (Baseline),Feature Extraction (Frozen),1e-3,0,Dropout(0.2) + Dense(1),0.0473,98.4,98.4,98.4,98.4
+Config B (Shallow Fine-Tuning),2-Stage Fine-Tuning,1e-3 -> 1e-5,20,Dropout(0.3) + Dense(1),0.0603,97.3,95.92,98.8,97.34
+Config C (Deep Fine-Tuning),2-Stage Fine-Tuning,1e-3 -> 2e-5,54,Dropout(0.4) + Dense(32) + Dense(1),0.0575,97.9,96.5,99.4,97.93
