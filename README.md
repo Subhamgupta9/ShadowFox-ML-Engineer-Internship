@@ -44,7 +44,17 @@ ShadowFox-ML-Engineer-Internship/
 │           └── tuning_comparison_chart.png
 │
 ├── Week-2/
-│   └── .gitkeep                              # Reserved for Week 2 deliverables
+│   └── Task-2-Car-Selling-Price-Prediction/  # CARSPHERE AI — Vehicle Valuation Engine
+│       ├── app/                              # Streamlit web application & styling utils
+│       ├── dataset/                          # Secondary market vehicle dataset (car.csv)
+│       ├── models/                           # Serialized Extra Trees pipeline (car_price_model.joblib)
+│       ├── notebooks/                        # EDA, model benchmarking & tuning notebook
+│       ├── reports/                          # Benchmark CSV & 10 publication figures
+│       ├── screenshots/                      # UI validation & governance captures
+│       ├── src/                              # Preprocessing, evaluation & prediction engine
+│       ├── tests/                            # Automated Pytest suite
+│       ├── requirements.txt                  # Task 2 dependencies
+│       └── README.md                         # Detailed Task 2 documentation & benchmark analysis
 │
 └── Week-3/
     └── .gitkeep                              # Reserved for Week 3 deliverables
@@ -57,7 +67,7 @@ ShadowFox-ML-Engineer-Internship/
 | Week | Task | Project Name | Domain / Stack | Status | Metric / Highlights |
 | :---: | :---: | :--- | :--- | :---: | :--- |
 | **Week 1** | Task 1 | [Image Tagging with TensorFlow](Week-1/Task-1-Image-Tagging/) | Computer Vision · MobileNetV2 · Streamlit | ✅ **Completed** | **98.52% Test Acc**, **98.40% Val Acc**, Hyperparameter Tuning verified |
-| **Week 2** | Task 2 | *To be announced / upcoming* | Machine Learning / NLP / Tabular | ⏳ In Progress | Task milestone in development |
+| **Week 2** | Task 2 | [CARSPHERE AI — Car Resale Valuation](Week-2/Task-2-Car-Selling-Price-Prediction/) | Tabular Regression · Extra Trees · Streamlit | ✅ **Completed** | **Test R² = 0.8119**, **Test MAE = ₹1.004L**, **5-Fold CV R² = 0.8973**, 8 Pytest unit tests |
 | **Week 3** | Task 3 | *To be announced / upcoming* | Advanced ML / Deployment | ⏳ Upcoming | Final internship deliverable |
 
 ---
@@ -66,9 +76,12 @@ ShadowFox-ML-Engineer-Internship/
 
 - **Programming Language:** Python 3.11+
 - **Deep Learning Frameworks:** TensorFlow 2.21.0, Keras 3.15.1
-- **Computer Vision & Image Processing:** Pillow (PIL) 13.0.0, MobileNetV2
-- **Web App & Deployment:** Streamlit 1.67.0
-- **Scientific Computing:** NumPy 2.4.6
+- **Machine Learning & Regression:** Scikit-learn 1.3+, Extra Trees Regressor, Gradient Boosting, Ridge Regression
+- **Data Engineering & Analysis:** Pandas 2.0+, NumPy 1.24+
+- **Visualization & Reporting:** Matplotlib 3.7+, Seaborn 0.12+, Pillow (PIL) 13.0+
+- **Web App & Deployment:** Streamlit 1.30+
+- **Model Serialization & Quality Assurance:** Joblib 1.3+, Pytest 7.0+
+- **Browser Automation & Inspection:** Playwright
 - **Version Control & Management:** Git, GitHub, GitHub Desktop
 
 ---
@@ -83,31 +96,26 @@ git clone https://github.com/Subhamgupta9/ShadowFox-ML-Engineer-Internship.git
 cd ShadowFox-ML-Engineer-Internship
 ```
 
-### 2. Navigate to the Task Directory
-For Week 1 (Image Tagging):
+### 2. Week 1: Image Tagging with TensorFlow
 ```bash
 cd Week-1/Task-1-Image-Tagging
-```
-
-### 3. Create a Virtual Environment and Install Dependencies
-```bash
 python -m venv venv
-# On Windows:
 .\venv\Scripts\activate
-# On Linux/macOS:
-source venv/bin/activate
-
 pip install -r requirements.txt
-```
-
-### 4. Run the Streamlit Application
-```bash
 streamlit run app.py
 ```
+Open `http://localhost:8501` to test the interactive image classifier. See [Week 1 Task 1 README](Week-1/Task-1-Image-Tagging/README.md).
 
-Open `http://localhost:8501` in your browser to test the interactive image classifier.
-
-For full architectural details, training benchmarks, and prediction samples, see the [Week 1 Task 1 README](Week-1/Task-1-Image-Tagging/README.md).
+### 3. Week 2: CARSPHERE AI — Car Selling Price Prediction
+```bash
+cd Week-2/Task-2-Car-Selling-Price-Prediction
+python -m venv venv
+.\venv\Scripts\activate
+pip install -r requirements.txt
+pytest tests/ -v
+streamlit run app/app.py --server.port 8502
+```
+Open `http://localhost:8502` to test the vehicle valuation dashboard. See [Week 2 Task 2 README](Week-2/Task-2-Car-Selling-Price-Prediction/README.md).
 
 ---
 
