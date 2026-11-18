@@ -28,7 +28,7 @@ ShadowFox-ML-Engineer-Internship/
 ├── .gitignore                                # Global Python, cache & ML exclusion rules
 ├── README.md                                 # Main internship portfolio overview
 │
-├── Week-1/
+├── Task-1/
 │   └── Task-1-Image-Tagging/                 # Image Tagging with TensorFlow
 │       ├── app.py                            # Streamlit web application & inference UI
 │       ├── requirements.txt                  # Python dependencies
@@ -43,7 +43,7 @@ ShadowFox-ML-Engineer-Internship/
 │           ├── sample_dog.jpg
 │           └── tuning_comparison_chart.png
 │
-├── Week-2/
+├── Task-2/
 │   └── Task-2-Car-Selling-Price-Prediction/  # CARSPHERE AI — Vehicle Valuation Engine
 │       ├── app/                              # Streamlit web application & styling utils
 │       ├── dataset/                          # Secondary market vehicle dataset (car.csv)
@@ -56,13 +56,13 @@ ShadowFox-ML-Engineer-Internship/
 │       ├── requirements.txt                  # Task 2 dependencies
 │       └── README.md                         # Detailed Task 2 documentation & benchmark analysis
 │
-└── Week-3/
+└── Task-3/
     └── Task-3-Language-Model-Deployment/     # NEXUS NLP — Language Model Deployment & Evaluation Lab
         ├── app/                              # Streamlit 4-tab interactive research laboratory
         ├── notebooks/                        # 19-section executed research notebook (nexus_nlp_lab.ipynb)
         ├── reports/                          # Benchmark results CSV, JSON summaries & figures
         ├── src/                              # Modular inference engine (FLAN-T5), metrics & runner
-        ├── tests/                            # Automated Pytest suite (23 unit tests)
+        ├── tests/                            # Automated Pytest suite (30 unit tests)
         ├── requirements.txt                  # Task 3 dependencies (PyTorch CPU, Transformers, etc.)
         └── README.md                         # Comprehensive Task 3 research report & documentation
 ```
@@ -71,11 +71,11 @@ ShadowFox-ML-Engineer-Internship/
 
 ## 📋 Task Status & Curriculum Roadmap
 
-| Week | Task | Project Name | Domain / Stack | Status | Metric / Highlights |
+| Task Domain | Task Ref | Project Name | Tech Stack | Status | Primary Benchmark Metrics |
 | :---: | :---: | :--- | :--- | :---: | :--- |
-| **Week 1** | Task 1 | [Image Tagging with TensorFlow](Week-1/Task-1-Image-Tagging/) | Computer Vision · MobileNetV2 · Streamlit | ✅ **Completed** | **98.52% Test Acc**, **98.40% Val Acc**, Hyperparameter Tuning verified |
-| **Week 2** | Task 2 | [CARSPHERE AI — Car Resale Valuation](Week-2/Task-2-Car-Selling-Price-Prediction/) | Tabular Regression · Extra Trees · Streamlit | ✅ **Completed** | **Test R² = 0.8119**, **Test MAE = ₹1.004L**, **5-Fold CV R² = 0.8973**, 8 Pytest unit tests |
-| **Week 3** | Task 3 | [NEXUS NLP — Language Model Lab](Week-3/Task-3-Language-Model-Deployment/) | NLP · FLAN-T5 (77M) · PyTorch CPU · Streamlit | ✅ **Completed** | **80.0% QA F1**, **83.33% Classif. Acc**, ROUGE/SacreBLEU evaluation, 23 Pytest unit tests, 4-Tab Web App |
+| **Foundational** | Task 1 | [Image Tagging with TensorFlow](Task-1/Task-1-Image-Tagging/) | Computer Vision · MobileNetV2 · Streamlit | ✅ **Completed** | **98.52% Test Acc**, **98.40% Val Acc**, 13 Pytest unit tests |
+| **Intermediate** | Task 2 | [CARSPHERE AI — Car Resale Valuation](Task-2/Task-2-Car-Selling-Price-Prediction/) | Tabular Regression · Extra Trees · Streamlit | ✅ **Completed** | **Test R² = 0.8119**, **Test MAE = ₹1.004L**, **5-Fold CV R² = 0.8973**, 8 Pytest unit tests |
+| **Advanced** | Task 3 | [NEXUS NLP — Language Model Lab](Task-3/Task-3-Language-Model-Deployment/) | NLP · FLAN-T5 (77M) · PyTorch CPU · Streamlit | ✅ **Completed** | **80.0% QA F1**, **66.67% Strict Classif. Acc**, ROUGE/SacreBLEU evaluation, 30 Pytest unit tests, 4-Tab Web App |
 
 ---
 
@@ -104,38 +104,40 @@ git clone https://github.com/Subhamgupta9/ShadowFox-ML-Engineer-Internship.git
 cd ShadowFox-ML-Engineer-Internship
 ```
 
-### 2. Week 1: Image Tagging with TensorFlow
+### 2. Task 1: Image Tagging with TensorFlow
 ```bash
-cd Week-1/Task-1-Image-Tagging
+cd Task-1/Task-1-Image-Tagging
 python -m venv venv
 .\venv\Scripts\activate
 pip install -r requirements.txt
+pytest tests/ -v
 streamlit run app.py
 ```
-*Open `http://localhost:8501` to test the image classifier. See [Week 1 Task 1 README](Week-1/Task-1-Image-Tagging/README.md).*
+*Open `http://localhost:8501` to test the image classifier. See [Task 1 README](Task-1/Task-1-Image-Tagging/README.md).*
 
-### 3. Week 2: CARSPHERE AI — Car Selling Price Prediction
+### 3. Task 2: CARSPHERE AI — Car Selling Price Prediction
 ```bash
-cd Week-2/Task-2-Car-Selling-Price-Prediction
+cd Task-2/Task-2-Car-Selling-Price-Prediction
 python -m venv venv
 .\venv\Scripts\activate
 pip install -r requirements.txt
 pytest tests/ -v
 streamlit run app/app.py --server.port 8502
 ```
-*Open `http://localhost:8502` to test the vehicle valuation dashboard. See [Week 2 Task 2 README](Week-2/Task-2-Car-Selling-Price-Prediction/README.md).*
+*Open `http://localhost:8502` to test the vehicle valuation dashboard. See [Task 2 README](Task-2/Task-2-Car-Selling-Price-Prediction/README.md).*
 
-### 4. Week 3: NEXUS NLP — Language Model Deployment & Intelligence Evaluation Lab
+### 4. Task 3: NEXUS NLP — Language Model Deployment & Intelligence Evaluation Lab
 ```bash
-cd Week-3/Task-3-Language-Model-Deployment
+cd Task-3/Task-3-Language-Model-Deployment
 python -m venv venv
 .\venv\Scripts\activate
-pip install torch==2.15.0+cpu --index-url https://download.pytorch.org/whl/cpu
+pip install "torch==2.15.0+cpu" --index-url https://download.pytorch.org/whl/cpu
 pip install -r requirements.txt
 pytest tests/ -v
 streamlit run app/app.py --server.port 8503
 ```
-*Open `http://localhost:8503` to launch the interactive research laboratory. See [Week 3 Task 3 README](Week-3/Task-3-Language-Model-Deployment/README.md).*
+*Open `http://localhost:8503` to launch the interactive research laboratory. See [Task 3 README](Task-3/Task-3-Language-Model-Deployment/README.md).*
+
 
 ---
 

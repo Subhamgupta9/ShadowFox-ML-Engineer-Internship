@@ -86,3 +86,11 @@ desktop.ini
 *.log
 tmp/
 temp/
+
+# Large Model Checkpoints & Hugging Face Cache
+model_cache/
+*.bin
+*.safetensors
+*.pt
+*.pth
+*.onnx

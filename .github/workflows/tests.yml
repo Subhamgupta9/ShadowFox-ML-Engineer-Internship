@@ -1,0 +1,140 @@
+name: CI - Multi-Task Quality Assurance & Testing
+
+on:
+  push:
+    branches:
+      - main
+      - 'phase-6/**'
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-syntax:
+    name: Code Quality & Syntax Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Compile and validate Python syntax
+        run: |
+          python -m compileall -q Task-1/ Task-2/ Task-3/
+          echo "All Python source files compiled with zero syntax errors."
+
+  test-task-1-unit:
+    name: Task 1 — Image Tagging Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Task 1 Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r Task-1/Task-1-Image-Tagging/requirements.txt
+
+      - name: Run Task 1 Unit Tests
+        run: |
+          python -m pytest Task-1/Task-1-Image-Tagging/tests/ -v
+
+  test-task-2-regression:
+    name: Task 2 — CARSPHERE AI Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Task 2 Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r Task-2/Task-2-Car-Selling-Price-Prediction/requirements.txt
+          pip install pytest
+
+      - name: Run Task 2 Unit Tests
+        run: |
+          python -m pytest Task-2/Task-2-Car-Selling-Price-Prediction/tests/ -v
+
+  test-task-3-metrics:
+    name: Task 3 — NEXUS NLP Evaluation Metrics & UI Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Task-3/Task-3-Language-Model-Deployment
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Task 3 Dependencies (CPU Build)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Task 3 Unit & Component Tests
+        run: |
+          python -m pytest tests/test_metrics.py tests/test_environment.py tests/test_app_components.py -v
+
+  test-task-3-model-integration:
+    name: Task 3 — NEXUS NLP Model Engine Integration
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'run-integration')
+    defaults:
+      run:
+        working-directory: Task-3/Task-3-Language-Model-Deployment
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Cache Hugging Face Model Weights
+        id: model-cache
+        uses: actions/cache@v4
+        with:
+          path: Task-3/Task-3-Language-Model-Deployment/model_cache
+          key: flan-t5-small-checkpoint-v1
+
+      - name: Install Task 3 Dependencies (CPU Build)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Download Model Checkpoint (if not cached)
+        if: steps.model-cache.outputs.cache-hit != 'true'
+        run: |
+          python tests/download_and_inspect_model.py
+
+      - name: Run Model Engine Integration Tests
+        run: |
+          python -m pytest tests/test_model_engine.py -v
