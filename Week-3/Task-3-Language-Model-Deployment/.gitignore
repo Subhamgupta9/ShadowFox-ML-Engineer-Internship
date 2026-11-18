@@ -1,0 +1,9 @@
+# Task 3 Local Git Ignore
+model_cache/
+*.bin
+*.safetensors
+.cache/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.pytest_cache/

@@ -1,0 +1,23 @@
+{
+  "model_id": "google/flan-t5-small",
+  "total_params": 76961152,
+  "load_time_sec": 64.577,
+  "memory_delta_mb": 481.94,
+  "arch_details": {
+    "model_type": "t5",
+    "d_model (Hidden Size)": 512,
+    "d_kv (Key/Value Dim)": 64,
+    "d_ff (Feed-Forward Dim)": 1024,
+    "num_layers (Encoder)": 8,
+    "num_decoder_layers": 8,
+    "num_heads": 6,
+    "relative_attention_num_buckets": 32,
+    "relative_attention_max_distance": 128,
+    "feed_forward_proj (Activation)": "gated-gelu",
+    "vocab_size": 32128,
+    "is_encoder_decoder": true,
+    "tie_word_embeddings": true,
+    "initializer_factor": 1.0,
+    "layer_norm_epsilon": 1e-06
+  }
+}
