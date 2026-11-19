@@ -35,7 +35,7 @@ Accurate pre-owned vehicle valuation is notoriously challenging due to non-linea
 
 - **Leak-Free Transformation Pipeline:** Implements a strict `ColumnTransformer` with `StandardScaler` for numeric predictors and `OneHotEncoder(drop='first', handle_unknown='ignore')` for categorical predictors, fit strictly within training folds during cross-validation and evaluated on a held-out 20% test partition.
 - **Empirical Multi-Model Benchmarking:** Evaluates five regression algorithms spanning linear baselines (`Linear Regression`, `Ridge Regression`) and tree-based ensembles (`Random Forest`, `Gradient Boosting`, `Extra Trees Regressor`).
-- **Leak-Free Model Selection & State-of-the-Art Generalization:** Hyperparameter-tuned **Gradient Boosting Regressor** achieved a 5-Fold Cross-Validation score of **$R^2 = 0.9056 \pm 0.0961$** and **$\text{CV MAE} = ₹0.6747\text{ Lakhs}$** on the training split, with an unbiased held-out test score of **$R^2 = 0.7143$** and **$\text{MAE} = ₹1.2178\text{ Lakhs}$** evaluated strictly once at release.
+- **Leak-Free Model Selection & State-of-the-Art Generalization:** Hyperparameter-tuned **Gradient Boosting Regressor** achieved a 5-Fold Cross-Validation score of **R² = 0.9056 ± 0.0961** and **$\text{CV MAE} = ₹0.6747\text{ Lakhs}$** on the training split, with an unbiased held-out test score of **Test R² = 0.7143** and **$\text{MAE} = ₹1.2178\text{ Lakhs}$** evaluated strictly once at release.
 - **Automated Quality & Regression Test Suite:** Complete `pytest` test suite verifying data ingestion, preprocessing integrity, model deserialization, schema/bounds validation, boundary edge-cases, and Indian Rupee (`₹`) currency formatting.
 - **Full-Featured Interactive Web Application:** Responsive Streamlit automotive intelligence dashboard with vehicle valuation cards, depreciation breakdown, live model benchmark metrics, interactive market trends, and transparent documentation.
 
@@ -89,7 +89,7 @@ To determine the most robust predictive architecture, five distinct regression m
 
 ### Verified Experimental Benchmark Table
 
-| Model | Type | 5-Fold CV $R^2$ Mean | 5-Fold CV $R^2$ Std | 5-Fold CV MAE | 5-Fold CV RMSE | Test $R^2$ ↑ | Test MAE (₹ Lakhs) ↓ | Test RMSE (₹ Lakhs) ↓ | Test MSE ↓ |
+| Model | Type | 5-Fold CV R² Mean | 5-Fold CV R² Std | 5-Fold CV MAE | 5-Fold CV RMSE | Test R² ↑ | Test MAE (₹ Lakhs) ↓ | Test RMSE (₹ Lakhs) ↓ | Test MSE ↓ |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **Linear Regression** | Baseline OLS | 0.8844 | $\pm 0.0291$ | 1.103L | 1.649L | — | — | — | — |
 | **Ridge Regression** | Regularized L2 | 0.8853 | $\pm 0.0290$ | 1.100L | 1.642L | — | — | — | — |
@@ -100,6 +100,8 @@ To determine the most robust predictive architecture, five distinct regression m
 
 > [!IMPORTANT]
 > **Single Held-Out Test Evaluation Protocol:** In accordance with strict machine learning methodology, candidate baselines were benchmarked solely using 5-Fold Cross-Validation on the training partition (`X_train`). The held-out test split (`X_test`) was evaluated strictly **once** on the final selected model (`Gradient Boosting Regressor (Optimized)`) at release. No repeated test evaluations were conducted on candidate architectures, eliminating test-set snooping and multiple-testing leakage.
+
+> **Small-Sample Variance Note:** The dataset contains 299 unique records after deduplication (239 train / 60 test). While 5-Fold CV achieves `R² = 0.9056 ± 0.0961`, the higher fold variance and `Test R² = 0.7143` reflect sensitivity to a small number of high-priced outlier vehicles in the 60-sample held-out split rather than data leakage.
 
 > [!NOTE]  
 > All raw evaluation metrics are stored in [`reports/experiment_results.csv`](reports/experiment_results.csv).

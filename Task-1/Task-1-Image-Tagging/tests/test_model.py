@@ -32,6 +32,7 @@ MODEL_FILE = TASK1_DIR / "shadowfox_cats_dogs_mobilenetv2.keras"
 FINETUNED_MODEL_FILE = TASK1_DIR / "shadowfox_cats_dogs_mobilenetv2_finetuned_best.keras"
 
 from src.predict import (
+    load_classifier,
     preprocess_image,
     logit_to_probability,
     classify_prediction,
@@ -235,3 +236,20 @@ def test_mocked_model_inference_cat():
     assert isinstance(confidence, float)
     assert 87.0 <= confidence <= 89.0
     mock_model.predict.assert_called_once()
+
+
+def test_real_model_inference_pipeline():
+    """Verify real .keras model loading and end-to-end 160x160 inference when TensorFlow is available."""
+    try:
+        import tensorflow as tf  # noqa: F401
+    except ImportError:
+        if pytest is not None:
+            pytest.skip("TensorFlow is not installed in the active runner venv.")
+        return
+
+    model, preprocess_fn = load_classifier(MODEL_FILE)
+    synthetic_img = Image.new("RGB", (160, 160), color=(120, 140, 160))
+    label, confidence = predict_image(model, synthetic_img, preprocess_fn)
+
+    assert label in {"Cat", "Dog"}
+    assert 50.0 <= confidence <= 100.0

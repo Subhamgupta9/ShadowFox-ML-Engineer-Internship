@@ -37,10 +37,10 @@ The architectural parameters were inspected directly from the loaded `model.conf
 | **Model ID** | `google/flan-t5-small` | Official checkpoint on Hugging Face Model Hub |
 | **Model Type** | `t5` (Encoder-Decoder) | Bidirectional encoder with autoregressive causal decoder |
 | **Total Parameters** | **76,961,152** (~76.96M) | 100% trainable floating-point parameters |
-| **Hidden Size ($d_{model}$)** | **512** | Embedding and representation dimension |
-| **Key/Value Dimension ($d_{kv}$)** | **64** | Dimension per attention head |
+| **Hidden Size (d_model)** | **512** | Embedding and representation dimension |
+| **Key/Value Dimension (d_kv)** | **64** | Dimension per attention head |
 | **Attention Heads** | **6** | Multi-head attention projections |
-| **Feed-Forward Dimension ($d_{ff}$)** | **1024** | Intermediate dimension of position-wise feedforward blocks |
+| **Feed-Forward Dimension (d_ff)** | **1024** | Intermediate dimension of position-wise feedforward blocks |
 | **Feed-Forward Activation** | **`gated-gelu`** | Gated GELU activation (T5v1.1 standard; verified in config) |
 | **Encoder Layers** | **8** | Bidirectional transformer encoder blocks |
 | **Decoder Layers** | **8** | Causal autoregressive transformer decoder blocks |
@@ -56,19 +56,19 @@ The architectural parameters were inspected directly from the loaded `model.conf
 
 > [!IMPORTANT]
 > **Preliminary Benchmark Scope & Sample Size Limitations:**
-> The quantitative metrics presented below are derived from a preliminary evaluation benchmark suite ($N=4$ to $6$ curated exemplars per task) designed to validate end-to-end inference mechanics, test metric computation pipelines, and verify directional model behavior.
+> The quantitative metrics presented below are derived from a preliminary evaluation benchmark suite (n = 4 to 6 curated exemplars per task) designed to validate end-to-end inference mechanics, test metric computation pipelines, and verify directional model behavior.
 > **These scores must not be interpreted as universal, definitive, or production-grade performance metrics.** Production-grade assessment requires running large-scale standardized datasets (e.g., SQuAD v2, CNN/DailyMail test split, WMT-16, SuperGLUE) across thousands of test instances. Actual measured scores on our curated benchmark suite are documented transparently below without modification.
 
 All evaluations were executed on CPU using the standardized evaluation harness ([src/benchmark.py](src/benchmark.py)) and recorded in [reports/benchmark_results.csv](reports/benchmark_results.csv):
 
-| Task Domain | Evaluation Metric | Score | Sample Size ($N$) | Recommended Strategy | Empirical Finding |
+| Task Domain | Evaluation Metric | Score | Sample Size (n) | Recommended Strategy | Empirical Finding |
 | :--- | :--- | :---: | :---: | :--- | :--- |
-| **Summarization** | ROUGE-L F1 | **21.72%** | 4 articles (Preliminary) | Beam Search ($k=4$) | Extracts core topics reliably; conservative length. |
-| **Summarization** | ROUGE-1 / ROUGE-2 | **23.44% / 10.47%** | 4 articles (Preliminary) | Beam Search ($k=4$) | Captures primary key phrases; strong unigram overlap. |
+| **Summarization** | ROUGE-L F1 | **21.72%** | 4 articles (Preliminary) | Beam Search (num_beams = 4) | Extracts core topics reliably; conservative length. |
+| **Summarization** | ROUGE-1 / ROUGE-2 | **23.44% / 10.47%** | 4 articles (Preliminary) | Beam Search (num_beams = 4) | Captures primary key phrases; strong unigram overlap. |
 | **Question Answering** | Token-Level F1 | **80.00%** | 5 contexts (Preliminary) | Greedy Search | High precision on factual, context-grounded queries. |
 | **Question Answering** | Exact Match (EM) | **80.00%** | 5 contexts (Preliminary) | Greedy Search | Matches ground-truth spans with SQuAD normalization. |
 | **Zero-Shot Classification**| Accuracy / Macro-F1 | **66.67% / 66.67%** | 6 texts (Preliminary) | Greedy Search | Strict exact-label evaluation (correcting preliminary substring inflation). |
-| **Machine Translation** | SacreBLEU | **19.84** | 5 sentences (Preliminary) | Beam Search ($k=4$) | High lexical alignment; minor syntax errors in long clauses. |
+| **Machine Translation** | SacreBLEU | **19.84** | 5 sentences (Preliminary) | Beam Search (num_beams = 4) | High lexical alignment; minor syntax errors in long clauses. |
 | **Reasoning & Logic** | Correctness | **25.00%** | 4 problems (Preliminary) | Greedy Search | Solves deductive syllogisms; fails multi-step arithmetic. |
 
 
@@ -246,4 +246,4 @@ jupyter notebook notebooks/nexus_nlp_lab.ipynb
 - [x] **Phase 2:** Project Scaffolding & Environment Initialization *(Approved)*
 - [x] **Phase 3:** Model Implementation, Multi-Task Benchmarking & Quantitative Evaluation *(Approved)*
 - [x] **Phase 4:** Interactive Web Application Development & Deployment *(Completed)*
-- [ ] **Phase 5:** Quality Assurance, GitHub Integration & Release
+- [x] **Phase 5:** Quality Assurance, GitHub Integration & Release
