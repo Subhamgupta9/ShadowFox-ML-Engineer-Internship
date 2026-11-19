@@ -270,13 +270,13 @@ def main():
         # Performance KPIs
         m1, m2, m3, m4 = st.columns(4)
         with m1:
-            render_kpi_card("Unseen Test R²", "0.812", "81.2% Variance Explained")
+            render_kpi_card("Unseen Test R²", "0.714", "71.4% Variance Explained")
         with m2:
-            render_kpi_card("Test MAE", "₹1.00 L", "Mean Absolute Error: ₹1,00,373")
+            render_kpi_card("Test MAE", "₹1.22 L", "Mean Absolute Error: ₹1,21,780")
         with m3:
-            render_kpi_card("Test RMSE", "₹2.20 L", "Root Mean Squared Error")
+            render_kpi_card("Test RMSE", "₹2.71 L", "Root Mean Squared Error")
         with m4:
-            render_kpi_card("5-Fold CV R²", "0.897 ± 0.092", "Cross-Validation Stability")
+            render_kpi_card("5-Fold CV R²", "0.906 ± 0.096", "Cross-Validation Stability")
             
         st.markdown("<br/>", unsafe_allow_html=True)
         
@@ -296,8 +296,8 @@ def main():
                     "Test_MSE": "{:.4f}",
                     "Test_RMSE": "₹{:.3f}L",
                     "Train_R2": "{:.4f}"
-                }).highlight_max(subset=['Test_R2', 'CV_R2_Mean'], color='#D1FAE5')
-                  .highlight_min(subset=['Test_MAE', 'Test_RMSE'], color='#FEF3C7'),
+                }, na_rep="—").highlight_max(subset=['CV_R2_Mean'], color='#D1FAE5')
+                              .highlight_min(subset=['CV_MAE_Mean', 'CV_RMSE_Mean'], color='#FEF3C7'),
                 use_container_width=True
             )
             
@@ -315,7 +315,7 @@ def main():
                 
         fig_fi = ROOT_DIR / "reports" / "figures" / "feature_importance.png"
         if fig_fi.exists():
-            st.image(str(fig_fi), caption="Final Feature Importance Attribution (Extra Trees Regressor)", use_container_width=True)
+            st.image(str(fig_fi), caption="Final Feature Importance Attribution (Gradient Boosting Regressor)", use_container_width=True)
 
     # =========================================================================
     # TAB 3: MARKET INSIGHTS & EXPLORATORY DATA ANALYSIS

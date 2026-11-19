@@ -6,13 +6,15 @@ Automated Unit Tests & Quality Assurance Suite
 Tests verify:
 1. Framework & library imports
 2. Model artifact existence and size integrity (.keras)
-3. Image preprocessing pipeline (dimensions, channels, data types)
-4. Classification decision boundary & confidence scoring
-5. Error handling on corrupted / invalid images
-6. End-to-end prediction output contract (label, confidence tuple)
+3. Modular image preprocessing pipeline (src.predict.preprocess_image)
+4. Logit-to-probability mapping & numerical stability (src.predict.logit_to_probability)
+5. Decision boundary and confidence bounds (src.predict.classify_prediction)
+6. Error handling on invalid/corrupted images and boundary conditions
+7. End-to-end prediction output contract (src.predict.predict_image)
 """
 
 import io
+import sys
 from pathlib import Path
 from unittest.mock import MagicMock
 import numpy as np
@@ -22,10 +24,20 @@ except ImportError:
     pytest = None
 from PIL import Image, UnidentifiedImageError
 
-
 TASK1_DIR = Path(__file__).resolve().parent.parent
+if str(TASK1_DIR) not in sys.path:
+    sys.path.insert(0, str(TASK1_DIR))
+
 MODEL_FILE = TASK1_DIR / "shadowfox_cats_dogs_mobilenetv2.keras"
 FINETUNED_MODEL_FILE = TASK1_DIR / "shadowfox_cats_dogs_mobilenetv2_finetuned_best.keras"
+
+from src.predict import (
+    preprocess_image,
+    logit_to_probability,
+    classify_prediction,
+    predict_image,
+    DEFAULT_MODEL_PATH
+)
 
 
 # ==============================================================================
@@ -73,19 +85,11 @@ def test_finetuned_model_artifact_exists():
 
 
 # ==============================================================================
-# 3. Image Preprocessing Pipeline
+# 3. Modular Image Preprocessing Pipeline (src.predict.preprocess_image)
 # ==============================================================================
 
-def preprocess_image(image: Image.Image, target_size=(160, 160)) -> np.ndarray:
-    """Standard preprocessing function mirroring Task 1 inference pipeline."""
-    rgb_image = image.convert("RGB")
-    resized_image = rgb_image.resize(target_size)
-    image_array = np.expand_dims(np.array(resized_image, dtype=np.float32), axis=0)
-    return image_array
-
-
 def test_image_preprocessing_rgb():
-    """Verify RGB image preprocessing produces exact expected shape and dtype."""
+    """Verify RGB image preprocessing produces exact expected shape (1, 160, 160, 3) and float32 dtype."""
     sample_img = Image.new("RGB", (320, 240), color=(128, 64, 32))
     processed = preprocess_image(sample_img)
     assert processed.shape == (1, 160, 160, 3)
@@ -107,57 +111,76 @@ def test_image_preprocessing_grayscale_conversion():
     assert processed.shape == (1, 160, 160, 3)
 
 
+def test_image_preprocessing_invalid_inputs():
+    """Verify preprocess_image raises ValueError on invalid inputs (None, non-Image)."""
+    if pytest is not None:
+        with pytest.raises(ValueError, match="Input image cannot be None"):
+            preprocess_image(None)
+
+        with pytest.raises(ValueError, match="Expected PIL Image"):
+            preprocess_image("not_an_image")
+
+
 # ==============================================================================
-# 4. Classification Decision Boundary & Probability Mapping
+# 4. Logit-to-Probability & Numerical Stability (src.predict.logit_to_probability)
 # ==============================================================================
 
-def sigmoid(x: float) -> float:
-    """Numerically stable sigmoid function."""
-    return float(1.0 / (1.0 + np.exp(-x)))
+def test_logit_to_probability_values():
+    """Verify sigmoid conversion maps logits to [0, 1] range correctly."""
+    assert logit_to_probability(0.0) == 0.5
+    assert logit_to_probability(2.0) > 0.85
+    assert logit_to_probability(-2.0) < 0.15
 
 
-def classify_logit(logit: float) -> tuple[str, float]:
-    """Map raw model logit to predicted class and confidence percentage."""
-    prob = sigmoid(logit)
-    if prob >= 0.5:
-        return "Dog", prob * 100.0
-    return "Cat", (1.0 - prob) * 100.0
+def test_logit_to_probability_numerical_stability():
+    """Verify extreme logits do not overflow or produce NaN."""
+    prob_large_pos = logit_to_probability(100.0)
+    prob_large_neg = logit_to_probability(-100.0)
+    assert 0.9999 <= prob_large_pos <= 1.0
+    assert 0.0 <= prob_large_neg <= 0.0001
+    assert not np.isnan(prob_large_pos)
+    assert not np.isnan(prob_large_neg)
 
+
+# ==============================================================================
+# 5. Classification Decision Boundary & Confidence (src.predict.classify_prediction)
+# ==============================================================================
 
 def test_classification_decision_dog():
-    """Positive logit represents high dog probability."""
-    label, confidence = classify_logit(2.0)
+    """Probability >= 0.5 must yield Dog label with confidence in [50, 100]%."""
+    label, confidence = classify_prediction(0.92)
     assert label == "Dog"
-    assert confidence > 80.0
-    assert confidence <= 100.0
+    assert round(confidence, 2) == 92.00
+    assert 50.0 <= confidence <= 100.0
 
 
 def test_classification_decision_cat():
-    """Negative logit represents high cat probability."""
-    label, confidence = classify_logit(-2.0)
+    """Probability < 0.5 must yield Cat label with confidence in [50, 100]%."""
+    label, confidence = classify_prediction(0.15)
     assert label == "Cat"
-    assert confidence > 80.0
-    assert confidence <= 100.0
+    assert round(confidence, 2) == 85.00
+    assert 50.0 <= confidence <= 100.0
 
 
-def test_classification_boundary_threshold():
-    """Logit of exactly 0.0 represents the 50.0% boundary."""
-    label, confidence = classify_logit(0.0)
+def test_classification_decision_boundary():
+    """Exact boundary (0.50) defaults to Dog at 50.0% confidence."""
+    label, confidence = classify_prediction(0.50)
     assert label == "Dog"
     assert confidence == 50.0
 
 
-def test_confidence_range_guarantee():
-    """Confidence score must always lie in [50.0, 100.0]."""
-    test_logits = [-10.0, -5.0, -1.0, -0.01, 0.0, 0.01, 1.0, 5.0, 10.0]
-    for logit in test_logits:
-        label, conf = classify_logit(logit)
-        assert label in ["Cat", "Dog"]
-        assert 50.0 <= conf <= 100.0, f"Confidence {conf} out of range [50, 100] for logit {logit}"
+def test_classification_invalid_probability():
+    """Probability outside [0, 1] raises ValueError."""
+    if pytest is not None:
+        with pytest.raises(ValueError, match="Probability must be between"):
+            classify_prediction(-0.1)
+
+        with pytest.raises(ValueError, match="Probability must be between"):
+            classify_prediction(1.05)
 
 
 # ==============================================================================
-# 5. Invalid Image Handling & Robustness
+# 6. Invalid Image Handling & Robustness
 # ==============================================================================
 
 def test_invalid_image_corrupted_bytes():
@@ -181,22 +204,34 @@ def test_empty_image_stream():
 
 
 # ==============================================================================
-# 6. End-to-End Prediction Contract (Mocked Model)
+# 7. End-to-End Prediction Contract via src.predict.predict_image
 # ==============================================================================
 
 def test_mocked_model_inference_pipeline():
-    """Test full inference pipeline with mocked model predict to avoid heavy downloads."""
+    """Test full inference pipeline using src.predict.predict_image with a mock estimator."""
     mock_model = MagicMock()
-    # Mocking a prediction returning logit 1.5
+    # Mocking raw logit output 1.5 -> prob ~0.8175 -> Dog ~81.75%
     mock_model.predict.return_value = np.array([[1.5]], dtype=np.float32)
 
     sample_img = Image.new("RGB", (200, 200), color=(100, 150, 200))
-    processed = preprocess_image(sample_img)
-    raw_prediction = mock_model.predict(processed, verbose=0)
-    logit = float(raw_prediction[0][0])
-    label, confidence = classify_logit(logit)
+    label, confidence = predict_image(mock_model, sample_img)
 
     assert label == "Dog"
     assert isinstance(confidence, float)
-    assert 50.0 <= confidence <= 100.0
+    assert 80.0 <= confidence <= 85.0
+    mock_model.predict.assert_called_once()
+
+
+def test_mocked_model_inference_cat():
+    """Test inference pipeline with a negative logit producing Cat."""
+    mock_model = MagicMock()
+    # Mocking raw logit output -2.0 -> prob ~0.1192 -> Cat ~88.08%
+    mock_model.predict.return_value = np.array([[-2.0]], dtype=np.float32)
+
+    sample_img = Image.new("RGB", (160, 160), color=(50, 50, 50))
+    label, confidence = predict_image(mock_model, sample_img)
+
+    assert label == "Cat"
+    assert isinstance(confidence, float)
+    assert 87.0 <= confidence <= 89.0
     mock_model.predict.assert_called_once()

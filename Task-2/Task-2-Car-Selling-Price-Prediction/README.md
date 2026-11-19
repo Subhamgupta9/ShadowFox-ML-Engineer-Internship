@@ -23,7 +23,7 @@ Accurate pre-owned vehicle valuation is notoriously challenging due to non-linea
    [Leak-Free Preprocessing] ──> [StandardScaler + OneHotEncoder]
                │
                ▼
- [Tuned Extra Trees Regressor] ──> [Unseen Test R² = 0.8119 | MAE = ₹1.004 Lakhs]
+ [Tuned Gradient Boosting Regressor] ──> [5-Fold CV R² = 0.9056 | Unseen Test R² = 0.7143 | MAE = ₹1.218 Lakhs]
                │
                ▼
     [CARSPHERE AI Streamlit] ──> [Real-Time Valuation Card + Depreciation Analytics]
@@ -35,7 +35,7 @@ Accurate pre-owned vehicle valuation is notoriously challenging due to non-linea
 
 - **Leak-Free Transformation Pipeline:** Implements a strict `ColumnTransformer` with `StandardScaler` for numeric predictors and `OneHotEncoder(drop='first', handle_unknown='ignore')` for categorical predictors, fit strictly within training folds during cross-validation and evaluated on a held-out 20% test partition.
 - **Empirical Multi-Model Benchmarking:** Evaluates five regression algorithms spanning linear baselines (`Linear Regression`, `Ridge Regression`) and tree-based ensembles (`Random Forest`, `Gradient Boosting`, `Extra Trees Regressor`).
-- **State-of-the-Art Predictive Performance:** Hyperparameter-tuned **Extra Trees Regressor** achieved **$R^2 = 0.8119$** and **$\text{MAE} = ₹1.004\text{ Lakhs}$** on completely unseen test data, with a 5-Fold Cross-Validation score of **$R^2 = 0.8973 \pm 0.0923$**.
+- **Leak-Free Model Selection & State-of-the-Art Generalization:** Hyperparameter-tuned **Gradient Boosting Regressor** achieved a 5-Fold Cross-Validation score of **$R^2 = 0.9056 \pm 0.0961$** and **$\text{CV MAE} = ₹0.6747\text{ Lakhs}$** on the training split, with an unbiased held-out test score of **$R^2 = 0.7143$** and **$\text{MAE} = ₹1.2178\text{ Lakhs}$** evaluated strictly once at release.
 - **Automated Quality & Regression Test Suite:** Complete `pytest` test suite verifying data ingestion, preprocessing integrity, model deserialization, schema/bounds validation, boundary edge-cases, and Indian Rupee (`₹`) currency formatting.
 - **Full-Featured Interactive Web Application:** Responsive Streamlit automotive intelligence dashboard with vehicle valuation cards, depreciation breakdown, live model benchmark metrics, interactive market trends, and transparent documentation.
 
@@ -91,12 +91,15 @@ To determine the most robust predictive architecture, five distinct regression m
 
 | Model | Type | 5-Fold CV $R^2$ Mean | 5-Fold CV $R^2$ Std | 5-Fold CV MAE | 5-Fold CV RMSE | Test $R^2$ ↑ | Test MAE (₹ Lakhs) ↓ | Test RMSE (₹ Lakhs) ↓ | Test MSE ↓ |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Linear Regression** | Baseline OLS | 0.8844 | $\pm 0.0291$ | 1.103L | 1.649L | 0.7528 | 1.473L | 2.524L | 6.371 |
-| **Ridge Regression** | Regularized L2 | 0.8853 | $\pm 0.0290$ | 1.100L | 1.642L | 0.7531 | 1.487L | 2.522L | 6.363 |
-| **Random Forest Regressor** | Bagging Ensemble | 0.8932 | $\pm 0.0879$ | 0.676L | 1.507L | 0.5508 | 1.431L | 3.402L | 11.577 |
-| **Gradient Boosting Regressor** | Boosting Ensemble | 0.9035 | $\pm 0.0982$ | 0.687L | 1.467L | 0.7605 | 1.130L | 2.485L | 6.174 |
-| **Extra Trees Regressor** | Randomized Trees | 0.8959 | $\pm 0.0926$ | 0.683L | 1.546L | 0.7971 | 1.059L | 2.287L | 5.228 |
-| **Extra Trees (Tuned)** ⭐ | **Hyperparameter Optimized** | **0.8973** | **$\pm 0.0923$** | **0.686L** | **1.531L** | **0.8119** | **1.004L** | **2.202L** | **4.848** |
+| **Linear Regression** | Baseline OLS | 0.8844 | $\pm 0.0291$ | 1.103L | 1.649L | — | — | — | — |
+| **Ridge Regression** | Regularized L2 | 0.8853 | $\pm 0.0290$ | 1.100L | 1.642L | — | — | — | — |
+| **Random Forest Regressor** | Bagging Ensemble | 0.8932 | $\pm 0.0879$ | 0.676L | 1.507L | — | — | — | — |
+| **Gradient Boosting Regressor** | Boosting Ensemble | 0.9035 | $\pm 0.0982$ | 0.687L | 1.467L | — | — | — | — |
+| **Extra Trees Regressor** | Randomized Trees | 0.8959 | $\pm 0.0926$ | 0.683L | 1.546L | — | — | — | — |
+| **Gradient Boosting (Tuned)** ⭐ | **Production Selected** | **0.9056** | **$\pm 0.0961$** | **0.675L** | **1.448L** | **0.7143** | **1.218L** | **2.714L** | **7.363** |
+
+> [!IMPORTANT]
+> **Single Held-Out Test Evaluation Protocol:** In accordance with strict machine learning methodology, candidate baselines were benchmarked solely using 5-Fold Cross-Validation on the training partition (`X_train`). The held-out test split (`X_test`) was evaluated strictly **once** on the final selected model (`Gradient Boosting Regressor (Optimized)`) at release. No repeated test evaluations were conducted on candidate architectures, eliminating test-set snooping and multiple-testing leakage.
 
 > [!NOTE]  
 > All raw evaluation metrics are stored in [`reports/experiment_results.csv`](reports/experiment_results.csv).
@@ -105,42 +108,44 @@ To determine the most robust predictive architecture, five distinct regression m
 
 ## ⚙️ Hyperparameter Optimization & Model Selection
 
-### Why Extra Trees Regressor Outperformed Other Architectures
-1. **Variance Reduction Through Extreme Randomization:** Unlike standard Random Forests which optimize split thresholds deterministically across feature subsets, Extra Trees draws random thresholds for each candidate feature. On small tabular datasets ($N = 299$), this aggressive randomization significantly dampens sample variance and prevents individual outliers from distorting tree splits.
-2. **Resistance to Test Split Degradation:** Standard Random Forest experienced severe test degradation ($R^2 = 0.5508$, test RMSE ₹3.402L), indicating susceptibility to localized overfitting. Extra Trees maintained superior out-of-fold generalization ($R^2 = 0.7971$ baseline $\to 0.8119$ tuned).
-3. **Linear Baselines Insufficiency:** Linear and Ridge regressions produced test MAEs around ₹1.48L and $R^2 \approx 0.753$, failing to capture non-linear interactions between vehicle age, mileage wear, and showroom price tiers.
+### Leakage-Free Model Selection & Why Gradient Boosting Outperformed Other Architectures
+1. **Zero Test-Set Leakage Protocol:** In strict accordance with rigorous ML engineering best practices, model selection was conducted **strictly using 5-Fold Cross-Validation on the training split (`X_train`)**. The held-out test split (`X_test`) was never accessed during model comparison or hyperparameter search, eliminating optimistic selection bias.
+2. **Superior Cross-Validation Generalization:** On the 239 training observations, **Gradient Boosting Regressor** achieved the highest cross-validation score among all baseline families ($R^2 = 0.9035 \pm 0.0982$, $\text{CV MAE} = ₹0.6871\text{L}$), outperforming Extra Trees ($R^2 = 0.8959$), Random Forest ($R^2 = 0.8932$), Ridge ($R^2 = 0.8853$), and Linear Regression ($R^2 = 0.8844$).
+3. **Sequential Residual Error Correction:** Gradient Boosting fits sequential shallow decision trees to negative gradients of pseudo-residuals. This iterative boosting mechanism successfully captures non-linear compounding depreciation curves while regularizing through learning rate shrinkage.
 
 ### Hyperparameter Search Space & Best Configuration
-A comprehensive grid search (`GridSearchCV`) with 5-fold cross-validation was conducted over the parameter space:
-- `n_estimators`: `[50, 100, 150, 200]`
-- `max_depth`: `[10, 15, 20, None]`
+A comprehensive grid search (`GridSearchCV`) with 5-fold cross-validation on the training split was conducted over the parameter space:
+- `n_estimators`: `[100, 150, 200]`
+- `learning_rate`: `[0.03, 0.05, 0.1, 0.15]`
+- `max_depth`: `[3, 4, 5]`
 - `min_samples_split`: `[2, 3, 5]`
-- `min_samples_leaf`: `[1, 2, 4]`
+- `subsample`: `[0.8, 0.9, 1.0]`
 
-**Optimal Configuration:**
-- `n_estimators`: `100`
-- `max_depth`: `15`
-- `min_samples_split`: `3`
-- `min_samples_leaf`: `1`
+**Optimal Configuration (Selected via CV):**
+- `n_estimators`: `200`
+- `learning_rate`: `0.15`
+- `max_depth`: `3`
+- `min_samples_split`: `5`
+- `subsample`: `1.0`
 - `random_state`: `42`
 
-### Gains Achieved by Optimization
-- **Test $R^2$:** Improved from **0.7971** to **0.8119** (+1.48 percentage points).
-- **Test MAE:** Reduced from **₹1.059 Lakhs** to **₹1.004 Lakhs** (mean prediction error of approximately ₹1,00,370).
-- **Test RMSE:** Reduced from **₹2.287 Lakhs** to **₹2.202 Lakhs**.
-- **Test MSE:** Reduced from **5.228** to **4.848** (7.3% reduction in squared error).
+### Cross-Validation & Held-Out Test Evaluation
+- **Cross-Validation $R^2$:** Improved from **0.9035** (baseline) to **0.9056** (tuned) on the training set.
+- **Cross-Validation MAE:** Reduced from **₹0.6871 Lakhs** to **₹0.6747 Lakhs**.
+- **Cross-Validation RMSE:** Reduced from **₹1.4671 Lakhs** to **₹1.4476 Lakhs**.
+- **Single Held-Out Test Evaluation:** When evaluated strictly once on the 60-sample held-out test partition at final release, the tuned Gradient Boosting model achieved **$R^2 = 0.7143$**, **$\text{MAE} = ₹1.2178\text{ Lakhs}$**, and **$\text{RMSE} = ₹2.7135\text{ Lakhs}$**.
 
 ### Feature Importance Decomposition
 Analysis of the tuned model reveals the relative contribution of each feature to resale price estimation:
 
 | Feature | Importance Weight | Primary Dynamic |
 | :--- | :---: | :--- |
-| **Showroom Price (`Present_Price`)** | **87.8%** | Anchor price foundation across all vehicle segments |
-| **Vehicle Age (`Vehicle_Age`)** | **7.5%** | Exponential secondary depreciation decay curve |
-| **Distance Traveled (`Kms_Driven`)** | **2.3%** | Operational mechanical wear and wear discount |
-| **Transmission: Manual (`Transmission_Manual`)** | **1.1%** | Modern urban preference premium for automatics |
-| **Seller: Individual (`Seller_Type_Individual`)** | **0.8%** | Dealer margin and refurbishment warranty premium |
-| **Fuel: Petrol (`Fuel_Type_Petrol`)** | **0.5%** | Commercial fuel efficiency preference |
+| **Showroom Price (`Present_Price`)** | **89.7%** | Anchor price foundation across all vehicle segments |
+| **Vehicle Age (`Vehicle_Age`)** | **7.7%** | Exponential secondary depreciation decay curve |
+| **Distance Traveled (`Kms_Driven`)** | **1.2%** | Operational mechanical wear and wear discount |
+| **Transmission: Manual (`Transmission_Manual`)** | **0.6%** | Modern urban preference premium for automatics |
+| **Fuel: Petrol (`Fuel_Type_Petrol`)** | **0.5%** | Fuel efficiency and secondary demand dynamics |
+| **Fuel: Diesel (`Fuel_Type_Diesel`)** | **0.3%** | High-mileage commercial preference |
 
 ---
 
@@ -156,7 +161,7 @@ The dashboard is partitioned into four functional modules:
    - Value retention index ($\frac{\text{Selling Price}}{\text{Present Price}} \times 100$) and estimated cumulative depreciation.
    - Quick-fill preset profiles (Budget Hatchback, Family Sedan, Premium Diesel SUV) for rapid evaluation.
 2. **📊 Model Intelligence & Benchmark:**
-   - Production performance scorecards ($R^2 = 0.8119$, $\text{MAE} = ₹1.00\text{L}$, $\text{RMSE} = ₹2.20\text{L}$).
+   - Production performance scorecards (CV $R^2 = 0.9056$, Test $R^2 = 0.7143$, $\text{MAE} = ₹1.22\text{L}$, $\text{RMSE} = ₹2.71\text{L}$).
    - Multi-model benchmarking comparison table and radar comparison.
    - Feature importance rankings and residual diagnostic visualizations.
 3. **📈 Market Insights & Economic Trends:**

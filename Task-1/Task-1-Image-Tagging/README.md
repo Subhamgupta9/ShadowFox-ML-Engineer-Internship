@@ -15,7 +15,8 @@ The system automates the process of image tagging and binary classification betw
 
 ### Key Highlights
 - **Production-Ready Inference Pipeline:** Lightweight inference engine optimized for low-latency image tagging.
-- **High-Accuracy Classifier:** Achieved **98.52% Test Accuracy** and **98.40% Validation Accuracy** on held-out evaluation sets.
+- **High-Accuracy Classifier:** Achieved **98.40% Validation Accuracy** (Val Loss 0.0473, Precision 98.40%, Recall 98.40%, F1 98.40%) on the held-out validation partition.
+- **Modular Inference Architecture:** Cleanly decoupled inference engine in `src/predict.py` shared by both the Streamlit web application and the automated test suite.
 - **Empirical Hyperparameter Tuning:** Rigorous benchmarking across 3 systematic configurations (frozen feature extraction vs. shallow fine-tuning vs. deep fine-tuning).
 - **Robust Model Deserialization:** Seamlessly bridges TensorFlow 2.x and Keras 3.x with a custom object registry for MobileNetV2 preprocessing.
 - **Responsive UI:** Streamlit interface styled with custom CSS cards, accessible status tags, and interactive confidence meters.
@@ -33,6 +34,9 @@ The goal was to determine whether unfreezing convolutional layers within the pre
 - **Control Variables:** All configurations utilized identical image dimensions ($160 \times 160 \times 3$), identical batch sizes ($32$), identical data augmentation (`RandomFlip('horizontal')`, `RandomRotation(0.1)`, `RandomZoom(0.1)`), and an identical validation split (`seed=42`).
 - **Regularization & Early Stopping:** Each configuration integrated `EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True)` to guard against overfitting.
 - **Evaluation Metrics:** Logged Validation Accuracy, Validation Loss, Precision, Recall, and calculated $F_1\text{-Score} = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}$.
+
+> [!NOTE]
+> **Metric Provenance & Dataset Splitting:** The official dataset partition consists of training (2,000 images) and held-out validation (1,000 images) sets. Config A achieved a verified **98.40% Validation Accuracy** (with 98.40% F1, 98.40% Precision, and 0.0473 Loss). Earlier informal references cited "98.52% Test Accuracy"; audit tracing of the original Colab notebook verified that no third independent held-out test split was generated. The verified empirical benchmark is 98.40% Validation Accuracy as recorded in [`experiment_results.csv`](experiment_results.csv).
 
 ---
 
@@ -132,7 +136,7 @@ Clean, distraction-free upload state:
 
 | Artifact | File Path | Description |
 | :--- | :--- | :--- |
-| **Production Model** | [`shadowfox_cats_dogs_mobilenetv2.keras`](shadowfox_cats_dogs_mobilenetv2.keras) | Original verified production classifier (9.20 MB, 98.52% test accuracy, Config A). |
+| **Production Model** | [`shadowfox_cats_dogs_mobilenetv2.keras`](shadowfox_cats_dogs_mobilenetv2.keras) | Original verified production classifier (9.20 MB, 98.40% validation accuracy, Config A). |
 | **Fine-Tuned Checkpoint** | [`shadowfox_cats_dogs_mobilenetv2_finetuned_best.keras`](shadowfox_cats_dogs_mobilenetv2_finetuned_best.keras) | Separately preserved fine-tuning run checkpoint (9.20 MB). |
 | **Experiment Metrics CSV** | [`experiment_results.csv`](experiment_results.csv) | Full numerical benchmark data for Configurations A, B, and C. |
 | **Tuning Notebook** | [`ShadowFox_Week1_Hyperparameter_Tuning.ipynb`](ShadowFox_Week1_Hyperparameter_Tuning.ipynb) | End-to-end, reproducible Google Colab notebook with GPU acceleration. |

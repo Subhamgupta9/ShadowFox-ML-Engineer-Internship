@@ -1,13 +1,17 @@
 
 import numpy as np
 from pathlib import Path
+import sys
 import streamlit as st
-import tensorflow as tf
 from PIL import Image, UnidentifiedImageError
-from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 
+TASK1_ROOT = Path(__file__).resolve().parent
+if str(TASK1_ROOT) not in sys.path:
+    sys.path.insert(0, str(TASK1_ROOT))
 
-MODEL_PATH = Path(__file__).with_name("shadowfox_cats_dogs_mobilenetv2.keras")
+from src.predict import load_classifier, predict_image
+
+MODEL_PATH = TASK1_ROOT / "shadowfox_cats_dogs_mobilenetv2.keras"
 
 st.set_page_config(
     page_title="Image Tagging with TensorFlow",
@@ -86,25 +90,12 @@ def inject_styles() -> None:
 
 @st.cache_resource
 def load_model():
-    """Load the trusted inference model and its MobileNetV2 preprocessing layer."""
-    return tf.keras.models.load_model(
-        MODEL_PATH,
-        custom_objects={"preprocess_input": preprocess_input},
-        compile=False,
-    )
+    """Load the trusted inference model via modular src.predict loader."""
+    return load_classifier(MODEL_PATH)
 
 def classify_image(image: Image.Image) -> tuple[str, float]:
     """Return the predicted label and its confidence for one uploaded image."""
-    resized_image = image.resize((160, 160))
-    image_array = np.expand_dims(
-        np.array(resized_image, dtype=np.float32), axis=0
-    )
-    prediction = model.predict(image_array, verbose=0)
-    dog_probability = float(tf.sigmoid(prediction[0][0]))
-
-    if dog_probability >= 0.5:
-        return "Dog", dog_probability * 100
-    return "Cat", (1 - dog_probability) * 100
+    return predict_image(model, image)
 
 
 inject_styles()
@@ -197,7 +188,7 @@ st.markdown(
         <div class="model-grid">
             <div class="model-item"><span>Model</span><strong>MobileNetV2</strong></div>
             <div class="model-item"><span>Classification</span><strong>Cats vs Dogs</strong></div>
-            <div class="model-item"><span>Test Accuracy</span><strong>98.52%</strong></div>
+            <div class="model-item"><span>Val Accuracy</span><strong>98.40%</strong></div>
             <div class="model-item"><span>Framework</span><strong>TensorFlow</strong></div>
         </div>
     </section>
@@ -205,4 +196,4 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-      
+

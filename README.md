@@ -47,12 +47,12 @@ ShadowFox-ML-Engineer-Internship/
 │   └── Task-2-Car-Selling-Price-Prediction/  # CARSPHERE AI — Vehicle Valuation Engine
 │       ├── app/                              # Streamlit web application & styling utils
 │       ├── dataset/                          # Secondary market vehicle dataset (car.csv)
-│       ├── models/                           # Serialized Extra Trees pipeline (car_price_model.joblib)
+│       ├── models/                           # Serialized Gradient Boosting pipeline (car_price_model.joblib)
 │       ├── notebooks/                        # EDA, model benchmarking & tuning notebook
 │       ├── reports/                          # Benchmark CSV & 10 publication figures
 │       ├── screenshots/                      # UI validation & governance captures
 │       ├── src/                              # Preprocessing, evaluation & prediction engine
-│       ├── tests/                            # Automated Pytest suite (8 unit tests)
+│       ├── tests/                            # Automated Pytest suite (14 unit tests)
 │       ├── requirements.txt                  # Task 2 dependencies
 │       └── README.md                         # Detailed Task 2 documentation & benchmark analysis
 │
@@ -62,7 +62,7 @@ ShadowFox-ML-Engineer-Internship/
         ├── notebooks/                        # 19-section executed research notebook (nexus_nlp_lab.ipynb)
         ├── reports/                          # Benchmark results CSV, JSON summaries & figures
         ├── src/                              # Modular inference engine (FLAN-T5), metrics & runner
-        ├── tests/                            # Automated Pytest suite (30 unit tests)
+        ├── tests/                            # Automated Pytest suite (38 unit & integration tests)
         ├── requirements.txt                  # Task 3 dependencies (PyTorch CPU, Transformers, etc.)
         └── README.md                         # Comprehensive Task 3 research report & documentation
 ```
@@ -73,9 +73,9 @@ ShadowFox-ML-Engineer-Internship/
 
 | Task Domain | Task Ref | Project Name | Tech Stack | Status | Primary Benchmark Metrics |
 | :---: | :---: | :--- | :--- | :---: | :--- |
-| **Foundational** | Task 1 | [Image Tagging with TensorFlow](Task-1/Task-1-Image-Tagging/) | Computer Vision · MobileNetV2 · Streamlit | ✅ **Completed** | **98.52% Test Acc**, **98.40% Val Acc**, 13 Pytest unit tests |
-| **Intermediate** | Task 2 | [CARSPHERE AI — Car Resale Valuation](Task-2/Task-2-Car-Selling-Price-Prediction/) | Tabular Regression · Extra Trees · Streamlit | ✅ **Completed** | **Test R² = 0.8119**, **Test MAE = ₹1.004L**, **5-Fold CV R² = 0.8973**, 8 Pytest unit tests |
-| **Advanced** | Task 3 | [NEXUS NLP — Language Model Lab](Task-3/Task-3-Language-Model-Deployment/) | NLP · FLAN-T5 (77M) · PyTorch CPU · Streamlit | ✅ **Completed** | **80.0% QA F1**, **66.67% Strict Classif. Acc**, ROUGE/SacreBLEU evaluation, 30 Pytest unit tests, 4-Tab Web App |
+| **Foundational** | Task 1 | [Image Tagging with TensorFlow](Task-1/Task-1-Image-Tagging/) | Computer Vision · MobileNetV2 · Streamlit | ✅ **Completed** | **98.40% Val Acc (Held-Out Partition)**, 17 Pytest unit tests |
+| **Intermediate** | Task 2 | [CARSPHERE AI — Car Resale Valuation](Task-2/Task-2-Car-Selling-Price-Prediction/) | Tabular Regression · Gradient Boosting · Streamlit | ✅ **Completed** | **5-Fold CV R² = 0.9056**, **Test R² = 0.7143**, **Test MAE = ₹1.218L**, 14 Pytest unit tests |
+| **Advanced** | Task 3 | [NEXUS NLP — Language Model Lab](Task-3/Task-3-Language-Model-Deployment/) | NLP · FLAN-T5 (77M) · PyTorch CPU · Streamlit | ✅ **Completed** | **80.0% QA F1**, **66.67% Strict Classif. Acc**, ROUGE/SacreBLEU evaluation, 38 Pytest unit and integration tests, 4-Tab Web App |
 
 ---
 
@@ -84,7 +84,7 @@ ShadowFox-ML-Engineer-Internship/
 - **Programming Languages:** Python 3.11+
 - **Deep Learning Frameworks:** PyTorch 2.15+ (CPU), TensorFlow 2.21.0, Keras 3.15.1
 - **NLP & Transformers Ecosystem:** Hugging Face Transformers 5.23+, Tokenizers, SentencePiece, Accelerate, Evaluate, ROUGE-Score, SacreBLEU
-- **Machine Learning & Tabular Models:** Scikit-learn 1.5+, Extra Trees Regressor, Gradient Boosting, Random Forest, Ridge Regression
+- **Machine Learning & Tabular Models:** Scikit-learn 1.5+, Gradient Boosting, Extra Trees Regressor, Random Forest, Ridge Regression
 - **Data Engineering & Scientific Computing:** Pandas 2.2+, NumPy 1.26+, SciPy 1.14+
 - **Visualization & Plotting:** Matplotlib 3.9+, Seaborn 0.13+, Plotly 5.20+
 - **Web Applications & Dashboards:** Streamlit 1.35+
