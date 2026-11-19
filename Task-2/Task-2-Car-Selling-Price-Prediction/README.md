@@ -200,15 +200,13 @@ Task-2/Task-2-Car-Selling-Price-Prediction/
 
 │   ├── __init__.py                     # Package initialization
 │   ├── app.py                          # Complete 4-tab Streamlit automotive application
-│   ├── utils.py                        # CSS styling injector, brand banners & KPI components
-│   └── capture_app_screenshots.py      # Automated Playwright UI screenshot test utility
+│   └── utils.py                        # CSS styling injector, brand banners & KPI components
 ├── dataset/
 │   └── car.csv                         # Official ShadowFox secondary car market dataset
 ├── models/
 │   └── car_price_model.joblib          # Serialized production pipeline (Preprocessor + Tuned Extra Trees)
 ├── notebooks/
-│   ├── Car_Selling_Price_Analysis.ipynb # 15-section comprehensive EDA, benchmarking & tuning notebook
-│   └── Car_Selling_Price_Analysis.html  # Standalone interactive HTML report of executed notebook
+│   └── Car_Selling_Price_Analysis.ipynb # 15-section comprehensive EDA, benchmarking & tuning notebook
 ├── reports/
 │   ├── experiment_results.csv          # Verified multi-model cross-validation and test benchmark records
 │   └── figures/                        # 10 publication-quality diagnostic and EDA charts

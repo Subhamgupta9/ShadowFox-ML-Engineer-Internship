@@ -40,7 +40,6 @@ ShadowFox-ML-Engineer-Internship/
 │       └── screenshots/                      # UI and tuning evaluation screenshots
 │           ├── app_ui_overview.png
 │           ├── prediction_result.png
-│           ├── sample_dog.jpg
 │           └── tuning_comparison_chart.png
 │
 ├── Task-2/
