@@ -247,9 +247,9 @@ def test_real_model_inference_pipeline():
             pytest.skip("TensorFlow is not installed in the active runner venv.")
         return
 
-    model, preprocess_fn = load_classifier(MODEL_FILE)
+    model = load_classifier(MODEL_FILE)
     synthetic_img = Image.new("RGB", (160, 160), color=(120, 140, 160))
-    label, confidence = predict_image(model, synthetic_img, preprocess_fn)
+    label, confidence = predict_image(model, synthetic_img)
 
     assert label in {"Cat", "Dog"}
     assert 50.0 <= confidence <= 100.0
