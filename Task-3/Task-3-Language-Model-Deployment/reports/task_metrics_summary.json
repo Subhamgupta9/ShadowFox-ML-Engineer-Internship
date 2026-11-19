@@ -1,0 +1,43 @@
+{
+  "benchmark_type": "preliminary",
+  "notes": "Preliminary multi-task evaluation set (N=4 to N=6 per task). Under strict exact-label evaluation, classification accuracy is 66.67% (4/6), correcting previous substring containment inflation (83.33%) where 'informal' erroneously matched 'formal'.",
+  "summarization": {
+    "rouge1": 23.44,
+    "rouge2": 10.47,
+    "rougeL": 21.72,
+    "count": 4
+  },
+  "question_answering": {
+    "exact_match": 80.0,
+    "f1": 80.0,
+    "count": 5
+  },
+  "classification": {
+    "accuracy": 66.67,
+    "macro_f1": 66.67,
+    "macro_precision": 66.67,
+    "macro_recall": 66.67,
+    "correct": 4,
+    "total": 6,
+    "unmatched": 1,
+    "preliminary_substring_accuracy": 83.33
+  },
+  "translation": {
+    "bleu": 19.84,
+    "precisions": [
+      51.79,
+      23.53,
+      13.04,
+      9.76
+    ],
+    "bp": 1.0,
+    "sys_len": 56,
+    "ref_len": 53,
+    "count": 5
+  },
+  "reasoning": {
+    "accuracy": 25.0,
+    "correct": 1,
+    "total": 4
+  }
+}
