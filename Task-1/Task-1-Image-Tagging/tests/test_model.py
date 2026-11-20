@@ -30,6 +30,9 @@ if str(TASK1_DIR) not in sys.path:
 
 MODEL_FILE = TASK1_DIR / "shadowfox_cats_dogs_mobilenetv2.keras"
 FINETUNED_MODEL_FILE = TASK1_DIR / "shadowfox_cats_dogs_mobilenetv2_finetuned_best.keras"
+FIXTURES_DIR = TASK1_DIR / "tests" / "fixtures"
+SAMPLE_CAT_FILE = FIXTURES_DIR / "sample_cat.jpg"
+SAMPLE_DOG_FILE = FIXTURES_DIR / "sample_dog.jpg"
 
 from src.predict import (
     load_classifier,
@@ -85,6 +88,20 @@ def test_finetuned_model_artifact_exists():
     assert file_size_mb >= 8.0, f"Finetuned checkpoint file is smaller than expected: {file_size_mb:.2f} MB"
 
 
+def test_load_classifier_missing_file():
+    """Verify load_classifier raises FileNotFoundError when given a non-existent path."""
+    non_existent = TASK1_DIR / "non_existent_model_checkpoint_9999.keras"
+    if pytest is not None:
+        with pytest.raises(FileNotFoundError, match="Model file not found"):
+            load_classifier(non_existent)
+    else:
+        try:
+            load_classifier(non_existent)
+            assert False, "Expected FileNotFoundError"
+        except FileNotFoundError:
+            pass
+
+
 # ==============================================================================
 # 3. Modular Image Preprocessing Pipeline (src.predict.preprocess_image)
 # ==============================================================================
@@ -113,13 +130,52 @@ def test_image_preprocessing_grayscale_conversion():
 
 
 def test_image_preprocessing_invalid_inputs():
-    """Verify preprocess_image raises ValueError on invalid inputs (None, non-Image)."""
+    """Verify preprocess_image raises ValueError on invalid inputs (None, non-Image, empty/zero dimensions)."""
     if pytest is not None:
         with pytest.raises(ValueError, match="Input image cannot be None"):
             preprocess_image(None)
 
         with pytest.raises(ValueError, match="Expected PIL Image"):
             preprocess_image("not_an_image")
+
+        with pytest.raises(ValueError, match="Expected PIL Image"):
+            preprocess_image([1, 2, 3])
+
+        with pytest.raises(ValueError, match="Expected PIL Image"):
+            preprocess_image({"data": 123})
+
+
+def test_image_preprocessing_diverse_modes_and_shapes():
+    """Verify preprocessing converts diverse PIL modes (1-bit, palette, CMYK) and extreme aspect ratios into (1, 160, 160, 3) float32."""
+    # 1-bit bilevel mode
+    img_bilevel = Image.new("1", (100, 100), color=1)
+    arr_bi = preprocess_image(img_bilevel)
+    assert arr_bi.shape == (1, 160, 160, 3)
+    assert arr_bi.dtype == np.float32
+
+    # Palette indexed mode
+    img_palette = Image.new("P", (120, 80))
+    arr_pal = preprocess_image(img_palette)
+    assert arr_pal.shape == (1, 160, 160, 3)
+    assert arr_pal.dtype == np.float32
+
+    # CMYK 4-channel mode
+    img_cmyk = Image.new("CMYK", (200, 150), color=(0, 255, 128, 0))
+    arr_cmyk = preprocess_image(img_cmyk)
+    assert arr_cmyk.shape == (1, 160, 160, 3)
+    assert arr_cmyk.dtype == np.float32
+
+    # Extreme aspect ratio banner (1200 x 200)
+    img_wide = Image.new("RGB", (1200, 200), color=(40, 80, 120))
+    arr_wide = preprocess_image(img_wide)
+    assert arr_wide.shape == (1, 160, 160, 3)
+    assert arr_wide.dtype == np.float32
+
+    # Extreme aspect ratio vertical strip (100 x 900)
+    img_tall = Image.new("RGB", (100, 900), color=(120, 40, 80))
+    arr_tall = preprocess_image(img_tall)
+    assert arr_tall.shape == (1, 160, 160, 3)
+    assert arr_tall.dtype == np.float32
 
 
 # ==============================================================================
@@ -253,3 +309,82 @@ def test_real_model_inference_pipeline():
 
     assert label in {"Cat", "Dog"}
     assert 50.0 <= confidence <= 100.0
+
+
+def test_sample_image_fixtures_exist():
+    """Verify genuine cat and dog test fixtures exist and have expected non-trivial size."""
+    assert SAMPLE_CAT_FILE.exists(), f"Sample cat fixture missing at {SAMPLE_CAT_FILE}"
+    assert SAMPLE_DOG_FILE.exists(), f"Sample dog fixture missing at {SAMPLE_DOG_FILE}"
+    assert SAMPLE_CAT_FILE.stat().st_size > 50_000, "Sample cat fixture appears truncated"
+    assert SAMPLE_DOG_FILE.stat().st_size > 20_000, "Sample dog fixture appears truncated"
+
+
+def test_known_sample_cat_image_regression():
+    """
+    Regression test verifying the production model correctly classifies the known sample cat image.
+
+    Note: This test validates deterministic end-to-end pipeline execution on a representative input;
+    it does not establish or claim a benchmark validation accuracy (which is 98.40% on the 400-sample validation set).
+    """
+    try:
+        import tensorflow as tf  # noqa: F401
+    except ImportError:
+        if pytest is not None:
+            pytest.skip("TensorFlow is not installed in the active runner venv.")
+        return
+
+    model = load_classifier(MODEL_FILE)
+    with Image.open(SAMPLE_CAT_FILE) as img:
+        label, confidence = predict_image(model, img)
+
+    assert label == "Cat", f"Expected 'Cat' but got '{label}'"
+    assert confidence >= 95.0, f"Expected high confidence for known cat image, got {confidence:.2f}%"
+
+
+def test_known_sample_dog_image_regression():
+    """
+    Regression test verifying the production model correctly classifies the known sample dog image.
+
+    Note: This test validates deterministic end-to-end pipeline execution on a representative input;
+    it does not establish or claim a benchmark validation accuracy (which is 98.40% on the 400-sample validation set).
+    """
+    try:
+        import tensorflow as tf  # noqa: F401
+    except ImportError:
+        if pytest is not None:
+            pytest.skip("TensorFlow is not installed in the active runner venv.")
+        return
+
+    model = load_classifier(MODEL_FILE)
+    with Image.open(SAMPLE_DOG_FILE) as img:
+        label, confidence = predict_image(model, img)
+
+    assert label == "Dog", f"Expected 'Dog' but got '{label}'"
+    assert confidence >= 95.0, f"Expected high confidence for known dog image, got {confidence:.2f}%"
+
+
+def test_predict_image_consistency_with_raw_pipeline():
+    """
+    Verify predict_image produces bitwise-identical results to step-by-step
+    preprocessing, model.predict, and probability classification.
+    """
+    try:
+        import tensorflow as tf  # noqa: F401
+    except ImportError:
+        if pytest is not None:
+            pytest.skip("TensorFlow is not installed in the active runner venv.")
+        return
+
+    model = load_classifier(MODEL_FILE)
+    with Image.open(SAMPLE_CAT_FILE) as img:
+        label_pipe, conf_pipe = predict_image(model, img)
+
+        # Deconstructed execution
+        arr = preprocess_image(img)
+        raw_pred = model.predict(arr, verbose=0)
+        logit = float(raw_pred[0][0])
+        prob = logit_to_probability(logit)
+        label_step, conf_step = classify_prediction(prob)
+
+    assert label_pipe == label_step
+    assert np.isclose(conf_pipe, conf_step, atol=1e-5)

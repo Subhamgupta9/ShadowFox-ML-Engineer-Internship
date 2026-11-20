@@ -167,7 +167,7 @@ Task-3/Task-3-Language-Model-Deployment/
 │   ├── model_engine.py                  # NexusModelEngine: Model lifecycle, tokenization, decoding
 │   ├── metrics.py                       # Standardized ROUGE, SacreBLEU, EM, Token F1, Accuracy
 │   └── benchmark.py                     # Multi-task benchmark & profiling runner
-├── tests/                               # Automated unit test suite (30/30 passing)
+├── tests/                               # Automated test suite (38 passing unit & integration tests)
 │   ├── __init__.py
 │   ├── test_environment.py             # Environment & PyTorch CPU tests
 │   ├── test_model_engine.py             # Engine, validation, decoding & metric tests
@@ -208,7 +208,7 @@ pip install -r requirements.txt
 ```powershell
 python -m pytest -v tests/
 ```
-*Expected: 30+ passed.*
+*Expected: 38 passed in ~65s.*
 
 ### Step 3: Run Multi-Task Benchmark Harness
 

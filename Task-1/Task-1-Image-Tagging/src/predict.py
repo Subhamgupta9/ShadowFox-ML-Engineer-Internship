@@ -87,12 +87,12 @@ def load_classifier(model_path: Optional[Union[str, Path]] = None):
     Returns:
         Loaded tf.keras.Model.
     """
-    import tensorflow as tf
-    from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
-
     path = Path(model_path) if model_path else DEFAULT_MODEL_PATH
     if not path.exists():
         raise FileNotFoundError(f"Model file not found at {path}")
+
+    import tensorflow as tf
+    from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 
     return tf.keras.models.load_model(
         str(path),

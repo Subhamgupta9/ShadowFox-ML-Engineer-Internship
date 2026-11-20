@@ -202,19 +202,22 @@ Input Image (160 × 160 × 3, RGB)
 
 When loading the trained `.keras` artifact across environments running Keras 3.x / TensorFlow 2.x, the embedded `Lambda` preprocessing layer requires explicit mapping of the preprocessing function.
 
-In `app.py`, this is handled robustly via:
+In `src/predict.py` (utilized by both `app.py` and automated test suites), this is handled robustly via:
 
 ```python
-import tensorflow as tf
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 
-@st.cache_resource
-def load_model():
-    """Load the trusted inference model and its MobileNetV2 preprocessing layer."""
+def load_classifier(model_path: Optional[Union[str, Path]] = None):
+    """Loads the Keras MobileNetV2 classifier with custom preprocess_input object."""
+    path = Path(model_path) if model_path else DEFAULT_MODEL_PATH
+    if not path.exists():
+        raise FileNotFoundError(f"Model file not found at {path}")
+
+    import tensorflow as tf
     return tf.keras.models.load_model(
-        MODEL_PATH,
+        str(path),
         custom_objects={"preprocess_input": preprocess_input},
-        compile=False,
+        compile=False
     )
 ```
 
@@ -230,6 +233,34 @@ This guarantees seamless model loading on any machine without deserialization wa
   - GitHub's soft warning threshold is **50 MB**.
   - GitHub's hard file rejection limit is **100 MB**.
   - At **9.2 MB**, both model artifacts are well below all limits and are tracked natively in standard Git without requiring Git LFS.
+
+---
+
+## 📁 Repository & Directory Layout
+
+```
+Task-1/Task-1-Image-Tagging/
+├── app.py                                              # Streamlit interactive image classification app
+├── experiment_results.csv                              # Empirical hyperparameter tuning benchmark records
+├── README.md                                           # Comprehensive project documentation & metrics
+├── requirements.txt                                    # Pinned Python dependencies
+├── shadowfox_cats_dogs_mobilenetv2.keras               # Selected production model checkpoint (9.2 MB)
+├── shadowfox_cats_dogs_mobilenetv2_finetuned_best.keras# Preserved fine-tuned best checkpoint (9.2 MB)
+├── ShadowFox_Week1_Hyperparameter_Tuning.ipynb         # Full Colab experiment & hyperparameter tuning notebook
+├── screenshots/                                        # UI captures and tuning comparison charts
+│   ├── app_ui_overview.png
+│   ├── prediction_result.png
+│   └── tuning_comparison_chart.png
+├── src/                                                # Modular inference engine
+│   ├── __init__.py
+│   └── predict.py                                      # Preprocessing, model loading & prediction functions
+└── tests/                                              # Automated QA & test suite (24 passing tests)
+    ├── __init__.py
+    ├── fixtures/                                       # Regression test fixtures
+    │   ├── sample_cat.jpg
+    │   └── sample_dog.jpg
+    └── test_model.py                                   # 24 unit, pipeline & regression tests
+```
 
 ---
 
@@ -267,7 +298,7 @@ pip install -r requirements.txt
 ```bash
 pytest tests/ -v
 ```
-*Expected: 13 passed tests verifying dependencies, model artifact integrity, preprocessing, decision boundary, and image error handling.*
+*Expected: 24 passed tests verifying dependencies, model artifact integrity, modular preprocessing, decision boundary, corrupt/unsupported images, missing model exceptions, and real cat/dog sample regressions.*
 
 ---
 

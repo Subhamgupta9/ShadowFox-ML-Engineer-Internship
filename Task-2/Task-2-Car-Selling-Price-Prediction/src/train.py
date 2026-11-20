@@ -245,7 +245,7 @@ def run_benchmarks():
             record["Test_MSE"] = np.nan
             record["Test_RMSE"] = np.nan
 
-    print(f"[{final_selected_name}] Test R2: {test_scores['R2_Score']:.4f} | Test MAE: {test_scores['MAE']:.4f} | Test RMSE: {test_scores['RMSE']:.4f}")
+    print(f"[{final_selected_name}] Test R2: {test_scores['R2_Score']:.4f} | Test MAE: {test_scores['MAE']:.4f} | Test MedAE: {test_scores['MedAE']:.4f} | Test RMSE: {test_scores['RMSE']:.4f}")
 
     final_df_results = pd.DataFrame(results)
     final_df_results.to_csv(CSV_PATH, index=False)

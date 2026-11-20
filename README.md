@@ -37,10 +37,12 @@ ShadowFox-ML-Engineer-Internship/
 │       ├── experiment_results.csv            # Hyperparameter tuning benchmark metrics
 │       ├── ShadowFox_Week1_Hyperparameter_Tuning.ipynb # Google Colab experiment notebook
 │       ├── README.md                         # Detailed Task 1 documentation & metrics
-│       └── screenshots/                      # UI and tuning evaluation screenshots
-│           ├── app_ui_overview.png
-│           ├── prediction_result.png
-│           └── tuning_comparison_chart.png
+│       ├── screenshots/                      # UI and tuning evaluation screenshots
+│       │   ├── app_ui_overview.png
+│       │   ├── prediction_result.png
+│       │   └── tuning_comparison_chart.png
+│       ├── src/                              # Modular inference engine (predict.py)
+│       └── tests/                            # Automated Pytest suite & fixtures (24 unit & regression tests)
 │
 ├── Task-2/
 │   └── Task-2-Car-Selling-Price-Prediction/  # CARSPHERE AI — Vehicle Valuation Engine
@@ -72,7 +74,7 @@ ShadowFox-ML-Engineer-Internship/
 
 | Task Domain | Task Ref | Project Name | Tech Stack | Status | Primary Benchmark Metrics |
 | :---: | :---: | :--- | :--- | :---: | :--- |
-| **Foundational** | Task 1 | [Image Tagging with TensorFlow](Task-1/Task-1-Image-Tagging/) | Computer Vision · MobileNetV2 · Streamlit | ✅ **Completed** | **98.40% Val Acc (Held-Out Partition)**, 17 Pytest unit tests |
+| **Foundational** | Task 1 | [Image Tagging with TensorFlow](Task-1/Task-1-Image-Tagging/) | Computer Vision · MobileNetV2 · Streamlit | ✅ **Completed** | **98.40% Val Acc (Held-Out Partition)**, 24 Pytest unit & regression tests |
 | **Intermediate** | Task 2 | [CARSPHERE AI — Car Resale Valuation](Task-2/Task-2-Car-Selling-Price-Prediction/) | Tabular Regression · Gradient Boosting · Streamlit | ✅ **Completed** | **5-Fold CV R² = 0.9056**, **Test R² = 0.7143**, **Test MAE = ₹1.218L**, 14 Pytest unit tests |
 | **Advanced** | Task 3 | [NEXUS NLP — Language Model Lab](Task-3/Task-3-Language-Model-Deployment/) | NLP · FLAN-T5 (77M) · PyTorch CPU · Streamlit | ✅ **Completed** | **80.0% QA F1**, **66.67% Strict Classif. Acc**, ROUGE/SacreBLEU evaluation, 38 Pytest unit and integration tests, 4-Tab Web App |
 

@@ -21,12 +21,14 @@ def calculate_metrics(y_true: np.ndarray or pd.Series, y_pred: np.ndarray) -> di
     """
     r2 = r2_score(y_true, y_pred)
     mae = mean_absolute_error(y_true, y_pred)
+    medae = np.median(np.abs(np.array(y_true) - np.array(y_pred)))
     mse = mean_squared_error(y_true, y_pred)
     rmse = np.sqrt(mse)
     
     return {
         "R2_Score": float(r2),
         "MAE": float(mae),
+        "MedAE": float(medae),
         "MSE": float(mse),
         "RMSE": float(rmse)
     }
